@@ -1,0 +1,73 @@
+name: 🐧 Linux
+on: [ push, pull_request ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  linux:
+    strategy:
+      matrix:
+        toolchain: [ stable ]
+        type: [ release ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ matrix.toolchain }}
+          override: true
+
+      - uses: actions/cache@v2
+        with:
+          path: |
+            target
+          key: linux-${{github.ref}}-${{github.sha}}
+          restore-keys: |
+            linux-${{github.ref}}-${{github.sha}}
+
+      - name: Install unzip, zip and wget
+        run: sudo apt-get update; sudo apt install git unzip zip wget python -y
+
+      - name: Build and install 
+        run: |
+          git clone https://github.com/qarmin/create_broken_files.git
+          cargo install --path create_broken_files
+
+      - name: Build Release
+        run: cargo build --release
+
+      - name: Fuzzer
+        run: |
+          wget https://github.com/qarmin/ImageOpening/releases/download/Test/Test.zip
+          mkdir roman
+          
+          for number in {1..1000}
+          do
+          
+          rm -r files || true
+          mkdir files
+          cd files
+          unzip ../Test.zip
+          cd ..
+          create_broken_files files 1000
+          
+          qq=2
+          
+          touch rr.txt
+          target/release/image_opening files 2>&1 rr.txt
+          ./check_ci_log.py rr.txt || qq=3
+          
+          if [[ qq == 3 ]]
+          then
+          mv files roman/files$number
+          fi
+          done
+
+      - name: Store Linux
+        uses: actions/upload-artifact@v2
+        with:
+          name: checked_files
+          path: roman
+
