@@ -1,4 +1,5 @@
 use image::DynamicImage;
+use img_hash::HasherConfig;
 use std::fs::Metadata;
 use std::path::Path;
 use std::time::SystemTime;
@@ -31,7 +32,7 @@ fn main() {
         process::exit(1);
     }
 
-    let supported_extensions = [".jpg", ".png", ".jpeg", ".bmp"];
+    let supported_extensions = [".jpg", ".png", ".jpeg", ".bmp", ".tga"];
 
     let mut folders_to_check: Vec<String> = Vec::new();
     let mut current_folder: String;
@@ -81,26 +82,41 @@ fn main() {
 
     for (file, size) in &files_to_check {
         let start_time = SystemTime::now();
-        let _file: DynamicImage = match image::open(file) {
+        println!("OOO - Trying to open {}", file);
+        let _image = match image::open(file) {
             Ok(t) => t,
             Err(e) => {
-                println!("Failed to open file {} - reason {}", file, e);
+                println!("LLL - Failed to open file {} - reason {}", file, e);
                 continue;
             }
         };
         let end_time = SystemTime::now();
         println!(
-            "Opening file '{}' ({} Kilobytes) took '{}' took miliseconds",
+            "TTT - Opening file '{}' ({} Kilobytes) took '{}' took miliseconds",
             file,
             size / 1024,
             end_time.duration_since(start_time).unwrap().as_millis()
         );
-        time_sum += end_time.duration_since(start_time).unwrap().as_millis() as u64;
+
+        // let hasher = HasherConfig::with_bytes_type::<[u8; 8]>().to_hasher();
+        // let hash = hasher.hash_image(&image);
+        // let mut buf = [0u8; 8];
+        // buf.copy_from_slice(&hash.as_bytes());
+        //
+        // let end_time2 = SystemTime::now();
+        // println!(
+        //     "Hashing file '{}' ({} Kilobytes) took '{}' took miliseconds",
+        //     file,
+        //     size / 1024,
+        //     end_time2.duration_since(end_time).unwrap().as_millis()
+        // );
+        //
+        // time_sum += end_time2.duration_since(start_time).unwrap().as_millis() as u64;
         size_sum += size;
     }
     println!();
     println!(
-        "Opening {} images which takes all {} MB, took {} seconds",
+        "Opening and hashing {} images which takes all {} MB, took {} seconds",
         files_to_check.len(),
         size_sum / 1024 / 1024,
         time_sum as f64 / 1024.0
