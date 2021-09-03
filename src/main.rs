@@ -32,7 +32,10 @@ fn main() {
         process::exit(1);
     }
 
-    let supported_extensions = [".jpg", ".png", ".jpeg", ".bmp", ".tga"];
+    let supported_extensions = [
+        ".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".tif", ".pnm", ".tga", ".ff", ".gif", ".jif", ".jfi", ".ico",
+        ".webp", ".avif",
+    ];
 
     let mut folders_to_check: Vec<String> = Vec::new();
     let mut current_folder: String;
@@ -69,7 +72,10 @@ fn main() {
                     Ok(t) => t,
                     Err(_) => continue, // Permission Denied
                 };
-                if !supported_extensions.iter().any(|e| file_name.ends_with(e)) {
+                if !supported_extensions
+                    .iter()
+                    .any(|e| file_name.to_lowercase().ends_with(e))
+                {
                     continue;
                 }
                 files_to_check.push((format!("{}{}", current_folder, file_name), metadata.len()));
