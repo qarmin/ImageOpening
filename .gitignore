@@ -5,3 +5,4 @@
 *#
 results*.txt
 TestSuite*
+Cargo.lock
